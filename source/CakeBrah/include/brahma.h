@@ -2,9 +2,11 @@
 
 #include "exploitdata.h"
 
-u32 brahma_init (void);
-u32 brahma_exit (void);
-s32 load_arm9_payload_offset (char *filename, u32 offset, u32 max_psize);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+s32 load_arm9_payload (char *filename);
 s32 load_arm9_payload_from_mem (u8* data, u32 dsize);
 void redirect_codeflow (u32 *dst_addr, u32 *src_addr);
 s32 map_arm9_payload (void);
@@ -13,15 +15,21 @@ void exploit_arm9_race_condition (void);
 s32 get_exploit_data (struct exploit_data *data);
 s32 firm_reboot ();
 
-#define load_arm9_payload(filename) load_arm9_payload_offset(filename, 0, 0)
-
 #define BRAHMA_NETWORK_PORT 80
 
 #define ARM_JUMPOUT 0xE51FF004 // LDR PC, [PC, -#04]
 #define ARM_RET     0xE12FFF1E // BX LR
 #define ARM_NOP     0xE1A00000 // NOP
 
+static u8  *g_ext_arm9_buf;
+static u32 g_ext_arm9_size = 0;
+static s32 g_ext_arm9_loaded = 0;
+
 extern void *arm11_start;
 extern void *arm11_end;
 extern void *arm9_start;
 extern void *arm9_end;
+
+#ifdef __cplusplus
+}
+#endif

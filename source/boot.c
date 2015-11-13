@@ -4,7 +4,7 @@
 #include <string.h>
 #include "scanner.h"
 #include "smdh.h"
-#include "netloader.h"
+#include "menu_netloader.h"
 
 extern FS_archive sdmcArchive;
 

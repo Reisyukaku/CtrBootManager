@@ -91,7 +91,7 @@ int menu_boot() {
         gfxClear();
 
         if (!timer) {
-            gfxDrawText(GFX_TOP, GFX_LEFT, &fontTitle, "*** Select a boot entry ***", 120, 20);
+            gfxDrawText(GFX_TOP, GFX_LEFT, &fontTitle, "*** Grub for CTR beta ***", 120, 20);
         } else {
             gfxDrawTextf(GFX_TOP, GFX_LEFT, &fontTitle, 100, 20,
                          "*** Booting %s in %i ***", config->entries[boot_index].title,

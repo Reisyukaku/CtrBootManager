@@ -1,9 +1,4 @@
-//
-// Created by cpasjuste on 13/11/15.
-//
-
-#ifndef CTRBOOTMANAGER_NETLOADER_H
-#define CTRBOOTMANAGER_NETLOADER_H
+#pragma once
 
 #define NETLOADER_PORT 17491
 
@@ -23,6 +18,3 @@ int netloader_loop(void);
 int netloader_exit(void);
 
 int netloader_draw_error(void);
-
-
-#endif //CTRBOOTMANAGER_NETLOADER_H

@@ -9,11 +9,6 @@ endif
 TOPDIR ?= $(CURDIR)
 include $(DEVKITARM)/3ds_rules
 
-# This should be set externally
-name ?= Cakes.dat
-filepath ?=
-dir_out ?= $(CURDIR)
-
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
 # BUILD is the directory where object files & intermediate files will be placed
@@ -31,39 +26,40 @@ dir_out ?= $(CURDIR)
 #     - icon.png
 #     - <libctru folder>/default_icon.png
 #---------------------------------------------------------------------------------
-TARGET		:=	$(name:.dat=)
+TARGET		:=	boot
 BUILD		:=	build
-SOURCES		:=	source source/libkhax
+SOURCES		:=	source source/fatfs source/CakeBrah/source \
+					source/CakeBrah/source/libkhax
+INCLUDES	:=	source source/fatfs source/CakeBrah/include
+
 DATA		:=	data
-INCLUDES	:=	include
-APP_TITLE	?=	$(name:.dat=)
-APP_DESCRIPTION ?=	Privileged ARM11/ARM9 Code Execution
-APP_AUTHOR	?=	patois
+APP_TITLE	:=	BootManager
+APP_DESCRIPTION :=	A boot manager...
+APP_AUTHOR	:=	Cpasjuste
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard
 
-CFLAGS	:=	-g -Wall -O3 -mword-relocations \
+CFLAGS	:=	-Wall -O2 -mword-relocations \
 			-fomit-frame-pointer -ffast-math \
 			$(ARCH)
 
-CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS -DARM_ARCH -w -DLAUNCHER_PATH='"$(filepath)$(name)"'
+CFLAGS	+=	$(INCLUDE) -DARM11 -D_3DS -DARM_ARCH -w
 
 CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions -std=gnu++11 -w
 
-ASFLAGS	:=	-g $(ARCH)
+ASFLAGS	:=	$(ARCH)
 LDFLAGS	=	-specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS	:= -lctru -lm
+LIBS	:= -lconfig -lctru -lm -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= $(CTRULIB)
-
+LIBDIRS	:= $(CTRULIB) $(PORTLIBS) $(DEVKITPRO)/libctrshell
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional
@@ -72,7 +68,7 @@ LIBDIRS	:= $(CTRULIB)
 ifneq ($(BUILD),$(notdir $(CURDIR)))
 #---------------------------------------------------------------------------------
 
-export OUTPUT	:=	$(dir_out)/$(TARGET)
+export OUTPUT	:=	$(CURDIR)/$(TARGET)
 export TOPDIR	:=	$(CURDIR)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
@@ -84,9 +80,10 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+#payload.bin
 
 #---------------------------------------------------------------------------------
-# use CXX for linking C++ projects, CC for standard C
+# use CXX for linking C++ projects, CC for standard CR
 #---------------------------------------------------------------------------------
 ifeq ($(strip $(CPPFILES)),)
 #---------------------------------------------------------------------------------
@@ -118,24 +115,28 @@ ifeq ($(strip $(ICON)),)
 		endif
 	endif
 else
-	export APP_ICON := $(ICON)
+	export APP_ICON := $(TOPDIR)/$(ICON)
 endif
 
 .PHONY: $(BUILD) clean all
 
 #---------------------------------------------------------------------------------
 all: $(BUILD)
+#payload.bin $(BUILD)
 
 $(BUILD):
 	@echo $(SFILES)
 	@[ -d $@ ] || mkdir -p $@
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
+#payload.bin :
+#	@cd data/payload && make
+
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).3dsx $(OUTPUT).smdh
-
+	@rm -fr $(BUILD) $(TARGET).3dsx $(OUTPUT).smdh $(TARGET).elf
+#	@cd data/payload && make clean
 
 #---------------------------------------------------------------------------------
 else
@@ -150,7 +151,8 @@ ifeq ($(strip $(NO_SMDH)),)
 all	:	$(OUTPUT).3dsx $(OUTPUT).smdh
 endif
 cpu.o cpu_threaded.o: CFLAGS += -Wno-unused-variable -Wno-unused-label
-$(OUTPUT).3dsx			:	$(OFILES)
+$(OUTPUT).3dsx	:	$(OUTPUT).elf
+$(OUTPUT).elf	:	$(OFILES)
 
 #---------------------------------------------------------------------------------
 # you need a rule like this for each extension you use as binary data
